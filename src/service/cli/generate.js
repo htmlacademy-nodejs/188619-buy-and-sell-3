@@ -75,7 +75,7 @@ module.exports = {
   run(args) {
     const [count] = args;
 
-    if (count > 1000) {
+    if (count > MAX_COUNT) {
       console.error(`Не больше ${MAX_COUNT} записей.`);
       process.exit(ExitCode.error);
     }
