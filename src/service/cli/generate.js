@@ -1,12 +1,14 @@
 'use strict';
 
 const fs = require(`fs`);
+const {ExitCode} = require(`../../constants`);
 const {
   getRandomInt,
   shuffle,
 } = require(`../../utils`);
 
 const DEFAULT_COUNT = 1;
+const MAX_COUNT = 1000;
 const FILE_NAME = `mocks.json`;
 
 const TITLES = [
@@ -72,15 +74,23 @@ module.exports = {
   name: `--generate`,
   run(args) {
     const [count] = args;
+
+    if (count > 1000) {
+      console.error(`Не больше ${MAX_COUNT} записей.`);
+      process.exit(ExitCode.error);
+    }
+
     const countOffer = Number.parseInt(count, 10) || DEFAULT_COUNT;
     const content = JSON.stringify(generateOffers(countOffer));
 
     fs.writeFile(FILE_NAME, content, (err) => {
       if (err) {
-        return console.error(`Can't write data to file...`);
+        console.error(`Не удалось записать данные в файл...`);
+        process.exit(ExitCode.error);
       }
 
-      return console.info(`Operation success. File created.`);
+      console.info(`Операция выполнена. Файл создан.`);
+      process.exit(ExitCode.success);
     });
   }
 };
