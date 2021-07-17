@@ -1,5 +1,6 @@
 'use strict';
 
+const chalk = require(`chalk`);
 const fs = require(`fs`);
 const {ExitCode} = require(`../../constants`);
 const {
@@ -76,7 +77,7 @@ module.exports = {
     const [count] = args;
 
     if (count > MAX_COUNT) {
-      console.error(`Не больше ${MAX_COUNT} записей.`);
+      console.error(chalk.red(`Не больше ${MAX_COUNT} записей.`));
       process.exit(ExitCode.error);
     }
 
@@ -85,11 +86,11 @@ module.exports = {
 
     fs.writeFile(FILE_NAME, content, (err) => {
       if (err) {
-        console.error(`Не удалось записать данные в файл...`);
+        console.error(chalk.red(`Не удалось записать данные в файл...`));
         process.exit(ExitCode.error);
       }
 
-      console.info(`Операция выполнена. Файл создан.`);
+      console.info(chalk.green(`Операция выполнена. Файл создан.`));
       process.exit(ExitCode.success);
     });
   }
