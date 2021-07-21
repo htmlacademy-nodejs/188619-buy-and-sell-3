@@ -15,7 +15,13 @@ const shuffle = (someArray) => {
   return someArray;
 };
 
+const sendRequestedPath = (req, res, next) => {
+  res.send(req.baseUrl + req.path);
+  next();
+};
+
 module.exports = {
   getRandomInt,
-  shuffle
+  shuffle,
+  sendRequestedPath
 };
