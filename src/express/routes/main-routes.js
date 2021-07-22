@@ -1,12 +1,11 @@
 'use strict';
 
 const Router = require(`express`);
-const {sendRequestedPath} = require(`../../utils`);
 const mainRouter = new Router();
 
-mainRouter.get(`/`, sendRequestedPath);
-mainRouter.get(`/register`, sendRequestedPath);
+mainRouter.get(`/`, (req, res) => res.render(`main`));
+mainRouter.get(`/register`, (req, res) => res.render(`sign-up`));
 mainRouter.get(`/login`, (req, res) => res.render(`login`));
-mainRouter.get(`/search`, sendRequestedPath);
+mainRouter.get(`/search`, (req, res) => res.render(`search-result`));
 
 module.exports = mainRouter;
