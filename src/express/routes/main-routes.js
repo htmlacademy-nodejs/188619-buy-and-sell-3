@@ -6,7 +6,7 @@ const mainRouter = new Router();
 
 mainRouter.get(`/`, sendRequestedPath);
 mainRouter.get(`/register`, sendRequestedPath);
-mainRouter.get(`/login`, sendRequestedPath);
+mainRouter.get(`/login`, (req, res) => res.render(`login`));
 mainRouter.get(`/search`, sendRequestedPath);
 
 module.exports = mainRouter;
