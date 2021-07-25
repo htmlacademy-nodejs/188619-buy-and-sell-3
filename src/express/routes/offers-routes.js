@@ -1,12 +1,11 @@
 'use strict';
 
 const {Router} = require(`express`);
-const {sendRequestedPath} = require(`../../utils`);
 const offersRouter = new Router();
 
-offersRouter.get(`/category/:id`, sendRequestedPath);
-offersRouter.get(`/add`, sendRequestedPath);
-offersRouter.get(`/edit/:id`, sendRequestedPath);
-offersRouter.get(`/:id`, sendRequestedPath);
+offersRouter.get(`/category/:id`, (req, res) => res.render(`category`));
+offersRouter.get(`/add`, (req, res) => res.render(`ticket/new-ticket`));
+offersRouter.get(`/edit/:id`, (req, res) => res.render(`ticket/ticket-edit`));
+offersRouter.get(`/:id`, (req, res) => res.render(`ticket/ticket`));
 
 module.exports = offersRouter;
