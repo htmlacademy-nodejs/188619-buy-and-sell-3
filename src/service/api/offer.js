@@ -7,9 +7,10 @@ const offerExist = require(`../middlewares/offer-exist`);
 const commentExist = require(`../middlewares/comment-exist`);
 const commentValidator = require(`../middlewares/comment-validator`);
 
-const route = new Router();
 
 module.exports = (app, service) => {
+  const route = new Router();
+
   app.use(`/offers`, route);
 
   route.get(`/`, (req, res) => {
@@ -68,7 +69,7 @@ module.exports = (app, service) => {
       .json(comment);
   });
 
-  route.delete(`/:offerId/comments/:commentId`, [offerExist(service), commentExist()], (req, res) => {
+  route.delete(`/:offerId/comments/:commentId`, [offerExist(service), commentExist], (req, res) => {
     const {offerId, commentId} = req.params;
     const comment = service.dropComment(offerId, commentId);
 
