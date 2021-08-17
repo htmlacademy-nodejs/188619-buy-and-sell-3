@@ -20,8 +20,11 @@ const sendRequestedPath = (req, res, next) => {
   next();
 };
 
+const ensureArray = (value) => Array.isArray(value) ? value : [value];
+
 module.exports = {
   getRandomInt,
   shuffle,
-  sendRequestedPath
+  sendRequestedPath,
+  ensureArray
 };

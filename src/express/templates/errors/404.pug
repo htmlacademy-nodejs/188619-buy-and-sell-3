@@ -19,8 +19,8 @@ html.html-not-found(lang='ru')
             a(href="/offers/add") Новая публикация
           li.error__item
             a(href="/") Главная страница
-        form.error__search.search.search--small(action="#", method="get", autocomplete="off") 
-          input(type="search" name="search" placeholder="Поиск" aria-label="Поиск")
+        form.error__search.search.search--small(action="/search", method="get", autocomplete="off") 
+          input(type="search" name="query" placeholder="Поиск" aria-label="Поиск")
           .search__icon
           .search__close-btn
         a.error__logo.logo(href="/")
