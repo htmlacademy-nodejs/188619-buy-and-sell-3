@@ -100,158 +100,489 @@ const mockData = [
   },
 ];
 
-const createAPI = () => {
+const createAPI = (service) => {
   const app = express();
-  const cloneData = JSON.parse(JSON.stringify(mockData));
   app.use(express.json());
-  // console.log(cloneData);
-  offer(app, new DataService(cloneData));
+  offer(app, service);
   return app;
 };
 
-describe(`API returns a list of all offers`, () => {
-  const app = createAPI();
-  let response;
-  beforeAll(async () => {
-    response = await request(app)
-      .get(`/offers`);
+describe(`Posting new offer`, () => {
+  describe(`Posting offer with valid data`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+
+    const newOffer = {
+      category: `Котики`,
+      title: `Дам погладить котика`,
+      description: `Дам погладить котика. Дорого. Не гербалайф`,
+      picture: `cat.jpg`,
+      type: `OFFER`,
+      sum: 100500,
+    };
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).post(`/offers`).send(newOffer);
+    });
+
+    test(`Status code should be 201 `, () => {
+      expect(response.statusCode).toBe(HttpCode.CREATED);
+    });
+
+    test(`API returns created offer`, () => {
+      expect(response.body).toEqual(expect.objectContaining(newOffer));
+    });
+
+    test(`Offer created in data service`, () => {
+      expect(dataService.findOne(response.body.id)).toMatchObject(newOffer);
+    });
   });
-  test(`Status code 200`, () => expect(response.statusCode).toBe(HttpCode.OK));
-  test(`Returns a list of 5 offers`, () => expect(response.body.length).toBe(5));
-  test(`First offer's id equals "aYPr7b"`, () => expect(response.body[0].id).toBe(`aYPr7b`));
-});
 
-describe(`API returns an offer with given id`, () => {
-  const app = createAPI();
-  let response;
-  beforeAll(async () => {
-    response = await request(app)
-      .get(`/offers/vW8jPO`);
-  });
-  test(`Status code 200`, () => expect(response.statusCode).toBe(HttpCode.OK));
-  test(`Offer's title is "Продам советскую посуду. Почти не разбита."`, () => expect(response.body.title).toBe(`Продам советскую посуду. Почти не разбита.`));
-});
+  describe(`Posting offer with invalid data`, () => {
+    let app = null;
+    let dataService = null;
 
-describe(`API creates an offer if data is valid`, () => {
-  const newOffer = {
-    category: `Котики`,
-    title: `Дам погладить котика`,
-    description: `Дам погладить котика. Дорого. Не гербалайф`,
-    picture: `cat.jpg`,
-    type: `OFFER`,
-    sum: 100500
-  };
-  const app = createAPI();
-  let response;
-  beforeAll(async () => {
-    response = await request(app)
-      .post(`/offers`)
-      .send(newOffer);
-  });
-  test(`Status code 201`, () => expect(response.statusCode).toBe(HttpCode.CREATED));
-  test(`Returns offer created`, () => expect(response.body).toEqual(expect.objectContaining(newOffer)));
-  test(`Offers count is changed`, () => request(app)
-    .get(`/offers`)
-    .expect((res) => expect(res.body.length).toBe(6))
-  );
-});
+    const newOffer = {
+      category: `Котики`,
+      title: `Дам погладить котика`,
+      description: `Дам погладить котика. Дорого. Не гербалайф`,
+      picture: `cat.jpg`,
+      type: `OFFER`,
+      sum: 100500,
+    };
+    const cloneData = JSON.parse(JSON.stringify(mockData));
 
-test(`API returns status code 404 when trying to change non-existent offer`, () => {
-  const app = createAPI();
-  const validOffer = {
-    category: `Это`,
-    title: `валидный`,
-    description: `объект`,
-    picture: `объявления`,
-    type: `однако`,
-    sum: 404
-  };
-  request(app)
-    .put(`/offers/NOEXST`)
-    .send(validOffer)
-    .expect(HttpCode.NOT_FOUND);
-});
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+    });
 
-test(`API returns status code 400 when trying to change an offer with invalid data`, () => {
-  const app = createAPI();
-  const invalidOffer = {
-    category: `Это`,
-    title: `невалидный`,
-    description: `объект`,
-    picture: `объявления`,
-    type: `нет поля sum`
-  };
-  request(app)
-    .put(`/offers/vW8jPO`)
-    .send(invalidOffer)
-    .expect(HttpCode.BAD_REQUEST);
-
-});
-
-test(`API refuses to delete non-existent offer`, () => {
-  const app = createAPI();
-  return request(app)
-    .delete(`/offers/NOEXST`)
-    .expect(HttpCode.NOT_FOUND);
-});
-
-describe(`API changes existent offer`, () => {
-  const newOffer = {
-    category: `Котики`,
-    title: `Дам погладить котика`,
-    description: `Дам погладить котика. Дорого. Не гербалайф`,
-    picture: `cat.jpg`,
-    type: `OFFER`,
-    sum: 100500
-  };
-  const app = createAPI();
-  let response;
-  beforeAll(async () => {
-    response = await request(app)
-      .put(`/offers/v27Jkq`)
-      .send(newOffer);
-  });
-  test(`Status code 200`, () => expect(response.statusCode).toBe(HttpCode.OK));
-  test(`Returns changed offer`, () => expect(response.body).toEqual(expect.objectContaining(newOffer)));
-  test(`Offer is really changed`, () => request(app)
-    .get(`/offers/v27Jkq`)
-    .expect((res) => expect(res.body.title).toBe(`Дам погладить котика`))
-  );
-});
-
-describe(`API refuses to create an offer if data is invalid`, () => {
-  const newOffer = {
-    category: `Котики`,
-    title: `Дам погладить котика`,
-    description: `Дам погладить котика. Дорого. Не гербалайф`,
-    picture: `cat.jpg`,
-    type: `OFFER`,
-    sum: 100500
-  };
-  const app = createAPI();
-  test(`Without any required property response code is 400`, async () => {
     for (const key of Object.keys(newOffer)) {
       const badOffer = {...newOffer};
       delete badOffer[key];
-      await request(app)
-        .post(`/offers`)
-        .send(badOffer)
-        .expect(HttpCode.BAD_REQUEST);
+
+      test(`Posting invalid offer without ${key} should return 400`, async () => {
+        const response = await request(app).post(`/offers`).send(badOffer);
+        expect(response.statusCode).toBe(HttpCode.BAD_REQUEST);
+      });
+
+      test(`Invalid offer without ${key} should not be in data`, async () => {
+        await request(app).post(`/offers`).send(badOffer);
+        expect(dataService.findAll()).not.toContain(badOffer);
+      });
+
+      test(`Offers count should not increase`, async () => {
+        await request(app).post(`/offers`).send(badOffer);
+        expect(dataService.findAll().length).toBe(5);
+      });
     }
   });
 });
 
-describe(`API correctly deletes an offer`, () => {
-  const app = createAPI();
-  let response;
-  beforeAll(async () => {
-    response = await request(app)
-      .delete(`/offers/TBbChx`);
+describe(`Getting list of all offers`, () => {
+  describe(`Getting list if offers exist`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).get(`/offers`);
+    });
+
+    test(`Status code should be 200 `, () => {
+      expect(response.statusCode).toBe(HttpCode.OK);
+    });
+
+    test(`Response body length should be equal to data offers length`, () => {
+      expect(response.body.length).toBe(cloneData.length);
+    });
+
+    test(`First offer id is equal to ${cloneData[0].id}`, () => {
+      expect(response.body[0].id).toBe(cloneData[0].id);
+    });
   });
-  test(`Status code 200`, () => expect(response.statusCode).toBe(HttpCode.OK));
-  test(`Returns deleted offer`, () => expect(response.body.id).toBe(`TBbChx`));
-  test(`Offer count is 4 now`, () => request(app)
-    .get(`/offers`)
-    .expect((res) => expect(res.body.length).toBe(4))
-  );
+
+  describe(`Getting list if offers doesn't exist`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+
+    beforeAll(async () => {
+      dataService = new DataService([]);
+      app = createAPI(dataService);
+      response = await request(app).get(`/offers`);
+    });
+
+    test(`Status code should be 200 `, () => {
+      expect(response.statusCode).toBe(HttpCode.OK);
+    });
+
+    test(`Response body length should be equal to 0`, () => {
+      expect(response.body.length).toBe(0);
+    });
+  });
+});
+
+describe(`Getting offer with given id`, () => {
+  describe(`If offer with given id exists`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).get(`/offers/vW8jPO`);
+    });
+
+    test(`Status code should be 200`, () => {
+      expect(response.statusCode).toBe(HttpCode.OK);
+    });
+
+    test(`Returns correct offer`, () => {
+      expect(response.body).toEqual(dataService.findOne(`vW8jPO`));
+    });
+  });
+
+  describe(`If offer with given id does not exist`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).get(`/offers/NOTEXIST`);
+    });
+
+    test(`Status code should be 404`, () => {
+      expect(response.statusCode).toBe(HttpCode.NOT_FOUND);
+    });
+
+    test(`Does not return any offer`, () => {
+      expect(dataService.findAll()).not.toContain(response.body);
+    });
+  });
+});
+
+describe(`Changing an offer`, () => {
+  describe(`Changing existent offer with valid data`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+    const newOffer = {
+      category: `Котики`,
+      title: `Дам погладить котика`,
+      description: `Дам погладить котика. Дорого. Не гербалайф`,
+      picture: `cat.jpg`,
+      type: `OFFER`,
+      sum: 100500,
+    };
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).put(`/offers/vW8jPO`).send(newOffer);
+    });
+
+    test(`Status code should be 200`, () => {
+      expect(response.statusCode).toBe(HttpCode.OK);
+    });
+
+    test(`Returns changed offer`, () => {
+      expect(response.body).toEqual(expect.objectContaining(newOffer));
+    });
+
+    test(`Offer in data is changed`, () => {
+      expect(dataService.findOne(`vW8jPO`)).toEqual(
+          expect.objectContaining(newOffer)
+      );
+    });
+  });
+
+  describe(`Changing offer with invalid data`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+    const invalidOffer = {
+      category: `Это`,
+      title: `невалидный`,
+      description: `объект`,
+      picture: `объявления`,
+      type: `нет поля sum`,
+    };
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).put(`/offers/vW8jPO`).send(invalidOffer);
+    });
+
+    test(`Status code should be 400`, () => {
+      expect(response.statusCode).toBe(HttpCode.BAD_REQUEST);
+    });
+
+    test(`Does not return changed offer`, () => {
+      expect(response.body).not.toEqual(expect.objectContaining(invalidOffer));
+    });
+
+    test(`Offer in data didn't change`, () => {
+      expect(dataService.findOne(`vW8jPO`)).not.toEqual(
+          expect.objectContaining(invalidOffer)
+      );
+    });
+  });
+
+  describe(`Changing not existent offer`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+    const newOffer = {
+      category: `Котики`,
+      title: `Дам погладить котика`,
+      description: `Дам погладить котика. Дорого. Не гербалайф`,
+      picture: `cat.jpg`,
+      type: `OFFER`,
+      sum: 100500,
+    };
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).put(`/offers/NOT_EXIST`).send(newOffer);
+    });
+
+    test(`Status code should be 404`, () => {
+      expect(response.statusCode).toBe(HttpCode.NOT_FOUND);
+    });
+  });
+});
+
+describe(`Deleting an offer`, () => {
+  describe(`Deleting existent offer`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).delete(`/offers/vW8jPO`);
+    });
+
+    test(`Status code should be 200`, () => {
+      expect(response.statusCode).toBe(HttpCode.OK);
+    });
+
+    test(`Deleted offers removes from data`, () => {
+      expect(dataService.findAll()).not.toContain(response.body);
+    });
+
+    test(`Returns correct offer`, () => {
+      expect(response.body.id).toEqual(`vW8jPO`);
+    });
+  });
+
+  describe(`Deleting non-existent offer`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).delete(`/offers/NOT_EXIST`);
+    });
+
+    test(`Status code should be 404`, () => {
+      expect(response.statusCode).toBe(HttpCode.NOT_FOUND);
+    });
+  });
+});
+
+describe(`Getting offer comments`, () => {
+  describe(`Getting comments of exist offer`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).get(`/offers/vW8jPO/comments`);
+    });
+
+    test(`Status code should be 200`, () => {
+      expect(response.statusCode).toBe(HttpCode.OK);
+    });
+
+    test(`Returns all comments`, () => {
+      expect(response.body).toEqual(dataService.findOne(`vW8jPO`).comments);
+    });
+  });
+
+  describe(`Getting comments of non-exist offer`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).get(`/offers/NON_EXIST/comments`);
+    });
+
+    test(`Status code should be 404`, () => {
+      expect(response.statusCode).toBe(HttpCode.NOT_FOUND);
+    });
+  });
+});
+
+describe(`Posting offer comment`, () => {
+  describe(`Posting comment with valid data`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+
+    const newComment = {
+      text: `Почему так дорого? Сделаете скидку?`,
+    };
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app)
+        .post(`/offers/vW8jPO/comments`)
+        .send(newComment);
+    });
+
+    test(`Status code should be 201 `, () => {
+      expect(response.statusCode).toBe(HttpCode.CREATED);
+    });
+
+    test(`API returns created comment`, () => {
+      expect(response.body).toEqual(expect.objectContaining(newComment));
+    });
+
+    test(`Comment created in data service`, () => {
+      expect(dataService.findOne(`vW8jPO`).comments).toEqual(
+          expect.arrayContaining([expect.objectContaining(newComment)])
+      );
+    });
+  });
+
+  describe(`Posting comment with invalid data`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+
+    const invalidComment = {
+      invalidKey: `Почему так дорого? Сделаете скидку?`,
+    };
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app)
+        .post(`/offers/vW8jPO/comments`)
+        .send(invalidComment);
+    });
+
+    test(`Status code should be 400 `, () => {
+      expect(response.statusCode).toBe(HttpCode.BAD_REQUEST);
+    });
+
+    test(`Comment isn't created in data service`, () => {
+      expect(dataService.findOne(`vW8jPO`).comments).not.toEqual(
+          expect.arrayContaining([expect.objectContaining(invalidComment)])
+      );
+    });
+  });
+
+  describe(`Posting comment to non-exist offer`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+
+    const newComment = {
+      text: `Почему так дорого? Сделаете скидку?`,
+    };
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app)
+        .post(`/offers/NOT_EXIST/comments`)
+        .send(newComment);
+    });
+
+    test(`Status code should be 404 `, () => {
+      expect(response.statusCode).toBe(HttpCode.NOT_FOUND);
+    });
+  });
+});
+
+describe(`Deleting an offer comment`, () => {
+  describe(`Deleting existent comment`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).delete(`/offers/vW8jPO/comments/9DqiBv`);
+    });
+
+    test(`Status code should be 200`, () => {
+      expect(response.statusCode).toBe(HttpCode.OK);
+    });
+
+    test(`Deleted comment removes from data`, () => {
+      expect(dataService.findOne(`vW8jPO`).comments).not.toEqual(
+          expect.arrayContaining([expect.objectContaining({id: `9DqiBv`})])
+      );
+    });
+
+    test(`Returns correct offer`, () => {
+      expect(response.body.id).toEqual(`9DqiBv`);
+    });
+  });
+
+  describe(`Deleting non-existent comment`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).delete(`/offers/vW8jPO/comments/NOT_EXIST`);
+    });
+
+    test(`Status code should be 404`, () => {
+      expect(response.statusCode).toBe(HttpCode.NOT_FOUND);
+    });
+  });
 });

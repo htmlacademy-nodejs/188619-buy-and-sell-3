@@ -65,7 +65,7 @@ module.exports = (app, service) => {
   route.post(`/:offerId/comments`, [offerExist(service), commentValidator], (req, res) => {
     const {offerId} = req.params;
     const comment = service.createComment(offerId, req.body);
-    return res.status(HttpCode.OK)
+    return res.status(HttpCode.CREATED)
       .json(comment);
   });
 

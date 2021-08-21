@@ -42,7 +42,7 @@ class OfferService {
     const offer = this.findOne(offerId);
     let comments = offer.comments;
     const deletedComment = comments.find((item) => item.id === commentId);
-    comments = comments.filter((item) => item.id !== commentId);
+    offer.comments = comments.filter((item) => item.id !== commentId);
     this.update(offerId, offer);
 
     return deletedComment;
