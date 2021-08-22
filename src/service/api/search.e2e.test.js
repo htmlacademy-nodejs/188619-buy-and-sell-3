@@ -100,38 +100,84 @@ const mockData = [
   },
 ];
 
-const app = express();
-app.use(express.json());
-search(app, new DataService(mockData));
+const createAPI = (service) => {
+  const app = express();
+  app.use(express.json());
+  search(app, service);
+  return app;
+};
 
-describe(`API returns offer based on search query`, () => {
+describe(`Searching by query string`, () => {
+  describe(`Serching exist offer by valid query string`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
 
-  let response;
-
-  beforeAll(async () => {
-    response = await request(app)
-      .get(`/search`)
-      .query({
-        query: `Продам книги Стивена Кинга`
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).get(`/search`).query({
+        query: `Продам книги Стивена Кинга`,
       });
+    });
+
+    test(`Status code should be 200`, () => {
+      expect(response.statusCode).toBe(HttpCode.OK);
+    });
+
+    test(`1 offer should be found`, () => {
+      expect(response.body.length).toBe(1);
+    });
+
+    test(`Returns correct offers`, () => {
+      expect(response.body).toEqual(
+          dataService.findAll(`Продам книги Стивена Кинга`)
+      );
+    });
   });
 
-  test(`Status code 200`, () => expect(response.statusCode).toBe(HttpCode.OK));
-  test(`1 offer found`, () => expect(response.body.length).toBe(1));
-  test(`Offer has correct id`, () => expect(response.body[0].id).toBe(`jOcKaK`));
+  describe(`Serching non-exist offer by valid query string`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).get(`/search`).query({
+        query: `Продам свою душу`,
+      });
+    });
+
+    test(`Status code should be 404`, () => {
+      expect(response.statusCode).toBe(HttpCode.NOT_FOUND);
+    });
+
+    test(`0 offers should be found`, () => {
+      expect(response.body.length).toBe(0);
+    });
+  });
+
+  describe(`Serching offer by empty query string`, () => {
+    let app = null;
+    let dataService = null;
+    let response = null;
+    const cloneData = JSON.parse(JSON.stringify(mockData));
+
+    beforeAll(async () => {
+      dataService = new DataService(cloneData);
+      app = createAPI(dataService);
+      response = await request(app).get(`/search`);
+    });
+
+    test(`Status code should be 400`, () => {
+      expect(response.statusCode).toBe(HttpCode.BAD_REQUEST);
+    });
+
+    test(`0 offers should be found`, () => {
+      expect(response.body.length).toBe(0);
+    });
+  });
 });
-
-test(`API returns code 404 if nothing is found`,
-    () => request(app)
-      .get(`/search`)
-      .query({
-        query: `Продам свою душу`
-      })
-      .expect(HttpCode.NOT_FOUND)
-);
-
-test(`API returns 400 when query string is absent`,
-    () => request(app)
-      .get(`/search`)
-      .expect(HttpCode.BAD_REQUEST)
-);

@@ -3,8 +3,8 @@
 const express = require(`express`);
 const request = require(`supertest`);
 const {HttpCode} = require(`../../constants`);
-const category = require(`./category`);
-const DataService = require(`../data-service/category`);
+const comment = require(`./comment`);
+const DataService = require(`../data-service/comment`);
 
 const mockData = [
   {
@@ -103,12 +103,12 @@ const mockData = [
 const createAPI = (service) => {
   const app = express();
   app.use(express.json());
-  category(app, service);
+  comment(app, service);
   return app;
 };
 
-describe(`Getting list of all categories`, () => {
-  describe(`Getting list if categories exist`, () => {
+describe(`Getting list of all comments`, () => {
+  describe(`Getting list if comemnts exist`, () => {
     let app = null;
     let dataService = null;
     let response = null;
@@ -117,14 +117,14 @@ describe(`Getting list of all categories`, () => {
     beforeAll(async () => {
       dataService = new DataService(cloneData);
       app = createAPI(dataService);
-      response = await request(app).get(`/categories`);
+      response = await request(app).get(`/comments`);
     });
 
     test(`Status code should be 200 `, () => {
       expect(response.statusCode).toBe(HttpCode.OK);
     });
 
-    test(`Response body should be equal to data categories`, () => {
+    test(`Response body should be equal to data comments`, () => {
       expect(response.body.length).toBe(dataService.findAll().length);
     });
   });
@@ -137,7 +137,7 @@ describe(`Getting list of all categories`, () => {
     beforeAll(async () => {
       dataService = new DataService([]);
       app = createAPI(dataService);
-      response = await request(app).get(`/categories`);
+      response = await request(app).get(`/comments`);
     });
 
     test(`Status code should be 200 `, () => {
