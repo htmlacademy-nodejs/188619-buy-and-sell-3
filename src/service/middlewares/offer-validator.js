@@ -6,6 +6,7 @@ const offerKeys = [`category`, `description`, `picture`, `title`, `type`, `sum`]
 
 module.exports = (req, res, next) => {
   const newOffer = req.body;
+  console.log(JSON.stringify(newOffer));
   const keys = Object.keys(newOffer);
   const keysExists = offerKeys.every((key) => keys.includes(key));
 
