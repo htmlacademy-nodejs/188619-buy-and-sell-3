@@ -29,21 +29,23 @@ class OfferService {
 
   createComment(offerId, comment) {
     const offer = this.findOne(offerId);
-    offer.comments.push({
+    const newComment = {
       id: nanoid(MAX_ID_LENGTH),
       text: comment.text
-    });
+    };
+    offer.comments.push(newComment);
 
-    return offer.comments;
+    return newComment;
   }
 
   dropComment(offerId, commentId) {
     const offer = this.findOne(offerId);
     let comments = offer.comments;
-    comments = comments.filter((item) => item.id !== commentId);
+    const deletedComment = comments.find((item) => item.id === commentId);
+    offer.comments = comments.filter((item) => item.id !== commentId);
     this.update(offerId, offer);
 
-    return comments;
+    return deletedComment;
   }
 
   findAll() {
